@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>VecinAPP - Promos del barrio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <!-- Leaflet CSS para el mapa -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <h1>VecinAPP</h1>
+      <p id="header-subtitle">Promos del barrio, sin complicaciones.</p>
+      <div id="session-bar"></div>
+    </header>
+
+    <main class="app-main" id="app-main">
+    </main>
+
+    <footer class="app-footer">
+      <span class="muted">
+        Esta demo guarda los datos en tu navegador (localStorage).
+      </span>
+    </footer>
+  </div>
+
+  <!-- Leaflet JS para el mapa -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <!-- (QR eliminado: ahora canje por código ingresado por el comercio) -->
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

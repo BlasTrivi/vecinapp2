@@ -1,0 +1,298 @@
+:root {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #111827;
+  background-color: #f3f4f6;
+}
+
+* , *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  padding: 1.5rem 1rem;
+  text-align: center;
+  background: linear-gradient(135deg, #ffb800, #f97316);
+  color: #111827;
+}
+
+.app-header h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.9rem;
+}
+
+.app-header p {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.role-switch {
+  margin-top: 1rem;
+  display: inline-flex;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.35);
+  padding: 0.25rem;
+}
+
+.btn {
+  border: none;
+  background: #e5e7eb;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: transform 0.05s ease, box-shadow 0.05s ease, background 0.1s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+}
+
+.btn.primary {
+  background: #111827;
+  color: #f9fafb;
+}
+
+.btn.danger {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.btn.tab {
+  background: transparent;
+  border-radius: 999px;
+}
+
+.btn.tab.active {
+  background: #111827;
+  color: #f9fafb;
+}
+
+.app-main {
+  flex: 1;
+  padding: 1.5rem 1rem 2rem;
+  max-width: 1024px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.app-main h2 {
+  margin-top: 0;
+}
+
+.app-footer {
+  padding: 0.75rem 1rem;
+  text-align: center;
+  font-size: 0.8rem;
+  background: #e5e7eb;
+}
+
+.muted {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.filters input,
+.filters select {
+  min-width: 160px;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 0.45rem 0.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid #d1d5db;
+  font: inherit;
+}
+
+textarea {
+  resize: vertical;
+}
+
+label {
+  display: block;
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+}
+
+.form {
+  background: #ffffff;
+  border-radius: 1rem;
+  padding: 1rem 1.25rem 1.25rem;
+  box-shadow: 0 8px 24px rgba(15,23,42,0.06);
+}
+
+.form h3 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+}
+
+.form-row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.form-row > label {
+  flex: 1;
+}
+
+.form-actions {
+  margin-top: 0.75rem;
+}
+
+.toolbar {
+  margin: 0.75rem 0 0.5rem;
+}
+
+.toolbar-right {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.75rem;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 1rem;
+  padding: 0.9rem 1rem 1rem;
+  box-shadow: 0 8px 24px rgba(15,23,42,0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.card-header {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 0.25rem;
+  align-items: center;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  background: #facc15;
+  color: #1f2937;
+}
+
+.badge-muted {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.badge-danger {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.card-title {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.card-text {
+  margin: 0.1rem 0;
+  font-size: 0.9rem;
+}
+
+.card-text.small {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.card-actions {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.layout-two-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr);
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .layout-two-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .app-main {
+    padding: 1rem 0.75rem 1.5rem;
+  }
+}
+
+/* ===== Responsive Enhancements ===== */
+@media (min-width: 640px) {
+  /* En pantallas medias distribuir tarjetas automáticamente */
+  .grid {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  }
+}
+
+@media (min-width: 960px) {
+  .app-header h1 { font-size: 2.1rem; }
+  .card-title { font-size: 1.15rem; }
+}
+
+@media (max-width: 560px) {
+  .app-header { padding: 1.25rem 0.75rem; }
+  .app-header h1 { font-size: 1.55rem; }
+  .app-header p { font-size: 0.85rem; }
+  .form { padding: 0.9rem 0.9rem 1rem; border-radius: 0.9rem; }
+  .card { padding: 0.75rem 0.85rem 0.85rem; border-radius: 0.9rem; }
+  .badge { font-size: 0.65rem; padding: 0.12rem 0.55rem; }
+  .btn { padding: 0.55rem 0.9rem; font-size: 0.85rem; }
+  .filters { gap: 0.4rem; }
+  .filters input, .filters select { flex: 1 1 120px; min-width: 120px; }
+  .form-row { flex-direction: column; }
+  #commerces-map { height: 260px !important; }
+  .toolbar-right { justify-content: center; }
+  .card-text { font-size: 0.85rem; }
+  .card-text.small { font-size: 0.75rem; }
+}
+
+@media (max-width: 380px) {
+  .btn { padding: 0.5rem 0.75rem; }
+  .app-main { padding: 0.85rem 0.6rem 1.25rem; }
+  .grid { gap: 0.6rem; }
+}
+
+/* Mejora de interacción táctil */
+.btn:active {
+  transform: scale(0.97);
+}
+
+/* Asegurar mapa y formularios adaptables */
+#commerces-map, #reg-map { width: 100%; max-width: 100%; }
+
+/* Evitar overflow horizontal en móviles estrechos */
+html, body { overflow-x: hidden; }
