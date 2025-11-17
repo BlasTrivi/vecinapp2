@@ -13,10 +13,12 @@ export const state = {
   currentCommerceId: null,
   currentUserId: null,
   promoEditingId: null,
+  uiView: 'default', // 'default' | 'profile'
   mapState: {
     userPos: null, // { lat, lng }
     radiusKm: 1,
-    selectedCommerceId: null // comercio seleccionado desde el mapa
+    selectedCommerceId: null, // comercio seleccionado desde el mapa
+    mapOpen: false // panel de mapa desplegable en vista usuario
   }
 };
 

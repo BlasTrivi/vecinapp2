@@ -1,7 +1,7 @@
 // auth.js
 import { state, uuid, getCurrentUser, getCurrentCommerce } from './state.js';
 import { saveData, saveCurrentUserId, saveCurrentCommerceId } from './storage.js';
-import { renderUserView, renderCommerceView } from './views.js';
+import { renderUserView, renderCommerceView, renderProfileView, renderCommerceStatsView } from './views.js';
 import { renderCommerceLogin } from './views.js';
 
 export function addLogout(container) {
@@ -304,12 +304,33 @@ export function renderApp() {
   if (state.sessionRole === 'user') {
     const user = getCurrentUser();
     subtitle.textContent = user ? `Hola, ${user.name}` : 'Vecino';
+    // Botones de sesión para usuario
+    const btnProfile = document.createElement('button');
+    btnProfile.className = 'btn';
+    btnProfile.textContent = 'Mi perfil';
+    btnProfile.addEventListener('click', ()=>{ state.uiView = 'profile'; renderApp(); });
+    sessionBar.appendChild(btnProfile);
     addLogout(sessionBar);
-    renderUserView(main);
+    if (state.uiView === 'profile') { renderProfileView(main); }
+    else { renderUserView(main); }
   } else if (state.sessionRole === 'commerce') {
     const com = getCurrentCommerce();
-    subtitle.textContent = com ? `Comercio: ${com.name}` : 'Comercio';
+    subtitle.textContent = com ? `Comercio: ${com.name || 'Mi comercio'}` : 'Comercio';
+    // Botones de sesión para comercio
+    const btnProfile = document.createElement('button');
+    btnProfile.className = 'btn';
+    btnProfile.textContent = 'Mi perfil';
+    btnProfile.addEventListener('click', ()=>{ state.uiView = 'profile'; renderApp(); });
+    sessionBar.appendChild(btnProfile);
+    const btnStats = document.createElement('button');
+    btnStats.className = 'btn';
+    btnStats.style.marginLeft = '0.4rem';
+    btnStats.textContent = 'Estadísticas';
+    btnStats.addEventListener('click', ()=>{ state.uiView = 'stats'; renderApp(); });
+    sessionBar.appendChild(btnStats);
     addLogout(sessionBar);
-    renderCommerceView(main);
+    if (state.uiView === 'profile') { renderProfileView(main); }
+    else if (state.uiView === 'stats') { renderCommerceStatsView(main); }
+    else { renderCommerceView(main); }
   }
 }
