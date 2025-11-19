@@ -147,6 +147,7 @@ export function renderCommerceView(container) {
   const layout = document.createElement('div');
   layout.className = 'layout-two-columns';
   const left = document.createElement('div');
+  left.className = 'column-left';
   const h2 = document.createElement('h2');
   h2.textContent = 'Panel de ' + (currentCommerce.name || 'Mi comercio');
   left.appendChild(h2);
@@ -163,6 +164,13 @@ export function renderCommerceView(container) {
   btnNew.addEventListener('click', () => { state.promoEditingId = '__new__'; document.dispatchEvent(new CustomEvent('rerender-app')); });
   toolbar.appendChild(btnNew);
   left.appendChild(toolbar);
+
+  let mobileFormAnchor = null;
+  if (state.promoEditingId !== null) {
+    mobileFormAnchor = document.createElement('div');
+    mobileFormAnchor.className = 'promo-form-anchor';
+    left.appendChild(mobileFormAnchor);
+  }
 
   // Panel mejorado para canjear códigos
   const redeemPanel = document.createElement('div');
@@ -217,11 +225,42 @@ export function renderCommerceView(container) {
   left.appendChild(grid);
   layout.appendChild(left);
   const right = document.createElement('div');
-  if (state.promoEditingId !== null) {
-    right.appendChild(createPromotionForm());
-  }
+  right.className = 'column-right';
   layout.appendChild(right);
   container.appendChild(layout);
+
+  if (state.promoEditingId !== null) {
+    const formWrapper = document.createElement('div');
+    formWrapper.className = 'promo-form-panel';
+    formWrapper.appendChild(createPromotionForm());
+
+    const mq = window.matchMedia('(max-width: 768px)');
+    const placeForm = (useMobile) => {
+      if (useMobile && mobileFormAnchor) {
+        right.innerHTML = '';
+        mobileFormAnchor.innerHTML = '';
+        mobileFormAnchor.classList.add('active');
+        mobileFormAnchor.appendChild(formWrapper);
+      } else {
+        if (mobileFormAnchor) {
+          mobileFormAnchor.innerHTML = '';
+          mobileFormAnchor.classList.remove('active');
+        }
+        right.innerHTML = '';
+        right.appendChild(formWrapper);
+      }
+    };
+
+    placeForm(mq.matches);
+    const handleMatch = (event) => {
+      if (!layout.isConnected) {
+        mq.removeEventListener('change', handleMatch);
+        return;
+      }
+      placeForm(event.matches);
+    };
+    mq.addEventListener('change', handleMatch);
+  }
 }
 
 export function renderCommerceLogin(container) {
