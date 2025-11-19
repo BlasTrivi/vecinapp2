@@ -1,93 +1,63 @@
 # VecinAPP2
 
-Aplicación demo para gestionar y visualizar promociones de comercios barriales. Los datos se almacenan en `localStorage` del navegador, sin backend.
+Demo para gestionar y visualizar promociones de comercios barriales. Ahora todos los datos se almacenan en una base NeDB (archivos `.db` en el servidor) accesible mediante una API Node/Express, evitando el uso de `localStorage` en el navegador.
 
-## Estructura del proyecto
+## Arquitectura
+- **Frontend estático** (`index.html` + `css/` + `js/`): UI en vanilla JS con módulos ES.
+- **Backend ligero** (`server/`): Express + NeDB (persistencia en archivos) que expone `/api/state` y sirve los archivos estáticos.
+
+## Estructura
 ```
-index.html         # Documento principal (referencia a CSS y JS externos)
-css/styles.css     # Estilos globales y componentes
-js/state.js        # Estado global y getters
-js/storage.js      # Persistencia localStorage
-js/auth.js         # Registro, login, logout y render principal
-js/promotions.js   # Lógica de promociones y acciones sobre tarjetas
-js/views.js        # Renderizado de vistas usuario y comercio
-js/main.js         # Punto de entrada (inicialización y eventos)
-js/app.js          # Archivo legacy previo (ya no se carga)
+index.html         # Shell principal
+css/styles.css     # Estilos globales
+js/state.js        # Estado global y utilidades
+js/storage.js      # Capa de persistencia (fetch a la API)
+js/auth.js         # Registro/login y enrutado simple
+js/promotions.js   # Lógica de promociones y formularios
+js/views.js        # Vistas de usuario/comercio/perfiles
+js/main.js         # Punto de entrada ES Modules
+js/scanner.js      # Scanner QR para canjes
+server/            # API Express + NeDB
+  package.json
+  server.js
+  db.js
+  .gitignore       # Ignora vecinapp.db
 TERMINOS.md        # Texto de términos (demo)
-README.md          # Documentación
+README.md          # Este archivo
 ```
 
-## Flujo básico
-1. Registro y Login: pestañas para elegir acción.
-	- Registro Vecino: nombre, email (único global), contraseña, términos.
-	- Registro Comercio: nombre comercio, rubro, email (único global), contraseña, ubicación, términos.
-	- Login: solo email y contraseña (rol detectado automáticamente por el sistema).
-2. Sesión: barra superior con saludo y botón "Cerrar sesión".
-3. Vecino: filtra y ve promociones, puede canjear (incrementa contador).
-4. Comercio: gestiona sus promociones (crear, editar, pausar, activar, eliminar).
-5. Cupones: un vecino puede generar UN cupón por promoción (válido 2 horas) con QR y código textual.
-6. Comercio: al canjear puede escanear el QR (cámara) o ingresar el código manual; se incrementa `redeemedCount` si el cupón está vigente y disponible.
+## Cómo ejecutar
+1. Instalar dependencias del backend:
+   ```bash
+   cd server
+   npm install
+   ```
+2. Iniciar el servidor (sirve API y frontend en `http://localhost:4173`):
+   ```bash
+   npm start
+   ```
+3. Abrir el navegador en `http://localhost:4173` y usar la app normalmente. Todos los cambios (usuarios, comercios, promociones y canjes) se guardan como archivos `.db` en `server/data`.
 
-## Escaneo de cupones (implementado)
-Se añadió soporte de escaneo automático desde el panel de comercio.
+> Nota: si querés apuntar a otro dominio/API, definí `window.VECINAPP_API_BASE` antes de cargar `js/main.js`.
 
-### Cómo funciona
-1. El vecino genera su cupón (botón "Obtener cupón"). Se abre modal con QR y código.
-2. El comercio pulsa "Escanear cupón" en su panel.
-3. Se abre un modal de cámara (getUserMedia) y se analiza cada frame con `jsQR`.
-4. Al detectar un código válido:
-   - Se valida vigencia (no vencido, no usado, promo activa, cupos disponibles).
-   - Se marca `redeemedAt` y se incrementa `redeemedCount` de la promoción.
-   - Se cierra el modal y se rerenderiza la vista.
-5. Si el QR no se lee o hay error, puede ingresarse el código manual en el campo del modal.
-
-### Librerías utilizadas
-- Generación de QR: `qrcodejs` vía CDN.
-- Decodificación: `jsQR` vía CDN.
-
-### Archivo nuevo
-- `js/scanner.js`: lógica de cámara, bucle de escaneo y modal. Exporta `openScannerModal()`.
-
-### Eventos
-- `open-scanner`: dispara apertura del modal.
-- `rerender-app`: re-render general tras canje.
-
-### Consideraciones
-- El escaneo continúa mientras no se canjee; códigos rechazados (vencido / ya usado) no detienen la cámara.
-- Solo se canjea una vez; se muestran alerts simples (se puede mejorar con UI dedicada).
-- Si el usuario revoca permisos de cámara, se muestra mensaje de error.
+## Flujo principal
+1. Registro/Login: un mismo email no puede repetirse entre vecinos y comercios.
+2. Sesión: barra superior con acceso a perfil, estadísticas (comercio) y logout.
+3. Vecino: explora promos, filtra por categoría/barrio/radio y ve códigos de canje.
+4. Comercio: crea/edita/pausa promociones, canjea códigos y ve métricas básicas.
+5. Scanner: cámara integrada con `js/scanner.js` + `jsQR` para validar códigos.
 
 ## Estado y persistencia
-- `vecinapp-data-v1`: objeto con `commerces`, `promotions`, `users`.
-- Nuevo: `coupons` dentro de `vecinapp-data-v1` con campos `{id, promoId, userId, commerceId, createdAt, expiresAt, redeemedAt, code}`.
-- `vecinapp-current-user-id`: id de vecino en sesión.
-- `vecinapp-current-commerce-id`: id de comercio en sesión.
- - Restricción: un mismo email NO puede existir simultáneamente como usuario y comercio.
+- `js/storage.js` consulta `GET /api/state` al iniciar.
+- Cada modificación llama a `saveData()` que sincroniza el snapshot completo mediante `POST /api/state`. El backend reemplaza el contenido de los archivos `.db` dentro de una operación atómica (borrar + insertar).
+- No se guarda ningún dato en `localStorage` o `sessionStorage`; al recargar habrá que iniciar sesión de nuevo.
 
-## Pasos para usar
-1. Abrir `index.html`.
-2. Registrarse eligiendo rol y completando datos.
-3. Usar la sesión según rol: filtrar (vecino) o gestionar (comercio).
-4. Cerrar sesión si se desea cambiar de rol.
-
-## Mejoras sugeridas futuras
-- Inicio de sesión (login) separado del registro.
-- Recuperación de contraseña y confirmación email.
-- Unificación de eventos y posible migración a framework (React/Vue/Svelte) si escala.
-- Tests unitarios por módulo (state, storage, auth, promotions).
-- Reemplazar librería QR placeholder por implementación real (ej: `qrcode` / `jsQR`).
-- Scanner de QR con cámara (getUserMedia + decodificación) en panel de comercio.
-- Evitar redención doble en distintos dispositivos (requiere backend).
-- Hash de contraseñas y seguridad (no texto plano).
-- Validaciones de formato email y complejidad de contraseña.
-- Internacionalización y traducciones.
-- Validaciones más estrictas (fechas, valores descuento).
-- Paginación o carga diferida si hay muchas promociones.
-- Backend real (API REST) y autenticación JWT/OAuth.
-- Service Worker para modo offline y PWA.
-- Tests unitarios (Jest) + integración.
-- Módulos ES (`import/export`).
+## Posibles mejoras
+- Endpoints granulares por entidad en lugar de sincronizar el snapshot completo.
+- Autenticación real (tokens/JWT) + hash de contraseñas.
+- Validaciones de negocio en la API y control de concurrencia.
+- Tests unitarios e2e.
+- Despliegue con Docker o plataformas serverless + base gestionada.
 
 ## Licencia
-Proyecto demo sin licencia explícita; adaptar según necesidad.
-# vecinapp2
+Proyecto demo sin licencia explícita; adaptar antes de usar en producción.

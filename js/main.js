@@ -1,18 +1,20 @@
 // main.js (entrypoint ES modules)
 import { state } from './state.js';
-import { loadData, loadCurrentCommerceId, loadCurrentUserId, saveCurrentCommerceId, saveCurrentUserId } from './storage.js';
+import { loadData } from './storage.js';
 import { renderApp } from './auth.js';
 import { promotionGlobalClickHandler } from './promotions.js';
 
-function init() {
-  state.data = loadData();
-  state.currentCommerceId = loadCurrentCommerceId();
-  state.currentUserId = loadCurrentUserId();
-  if (state.currentUserId) state.sessionRole = 'user';
-  else if (state.currentCommerceId) state.sessionRole = 'commerce';
-  document.getElementById('app-main').addEventListener('click', promotionGlobalClickHandler);
+async function init() {
+  const mainEl = document.getElementById('app-main');
+  if (mainEl) {
+    mainEl.innerHTML = '<p class="muted">Cargando datos del servidor…</p>';
+  }
+  state.data = await loadData();
+  if (mainEl) {
+    mainEl.addEventListener('click', promotionGlobalClickHandler);
+  }
   document.addEventListener('rerender-app', () => renderApp());
-  document.addEventListener('clear-commerce', () => { saveCurrentCommerceId(); renderApp(); });
+  document.addEventListener('clear-commerce', () => renderApp());
   renderApp();
 }
 

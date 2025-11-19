@@ -1,0 +1,14 @@
+{
+  "name": "vecinapp-server",
+  "version": "1.0.0",
+  "description": "API y servidor estático para VecinAPP",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "nedb-promises": "^6.2.3"
+  }
+}

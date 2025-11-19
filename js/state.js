@@ -1,8 +1,4 @@
 // state.js
-export const STORAGE_KEY = "vecinapp-data-v1";
-export const STORAGE_COMMERCE_ID_KEY = "vecinapp-current-commerce-id";
-export const STORAGE_USER_ID_KEY = "vecinapp-current-user-id";
-
 export const state = {
   sessionRole: null,
   data: {

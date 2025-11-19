@@ -244,7 +244,7 @@ export function createPromotionForm() {
       form.elements['discountType'].value = 'percent';
     }
 
-    // Manejo de archivo -> Data URL para guardar en localStorage
+    // Manejo de archivo -> Data URL para persistir junto a la promo
     const fileInput = document.getElementById('image-file');
     const prevWrap = document.getElementById('image-preview-wrap');
     const prev = document.getElementById('image-preview');

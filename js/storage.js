@@ -1,52 +1,44 @@
 // storage.js
-import { STORAGE_KEY, STORAGE_COMMERCE_ID_KEY, STORAGE_USER_ID_KEY, state } from './state.js';
+import { state } from './state.js';
 
-export function loadData() {
+const API_BASE = window.VECINAPP_API_BASE || '';
+
+export async function loadData() {
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      return { commerces: [], promotions: [], users: [] };
-    }
-    const parsed = JSON.parse(raw);
+    const res = await fetch(`${API_BASE}/api/state`, { headers: { 'Accept': 'application/json' } });
+    if (!res.ok) throw new Error(`Estado HTTP ${res.status}`);
+    const payload = await res.json();
     return {
-      commerces: Array.isArray(parsed.commerces) ? parsed.commerces : [],
-      promotions: Array.isArray(parsed.promotions) ? parsed.promotions : [],
-      users: Array.isArray(parsed.users) ? parsed.users : []
+      commerces: Array.isArray(payload.commerces) ? payload.commerces : [],
+      promotions: Array.isArray(payload.promotions) ? payload.promotions : [],
+      users: Array.isArray(payload.users) ? payload.users : []
     };
-  } catch (e) {
-    console.error('Error loading data', e);
+  } catch (error) {
+    console.error('No se pudieron obtener los datos remotos', error);
     return { commerces: [], promotions: [], users: [] };
   }
 }
 
 export function saveData() {
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state.data));
-  } catch (e) {
-    console.error('Error saving data', e);
-  }
+  fetch(`${API_BASE}/api/state`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(state.data)
+  }).catch((error) => console.error('No se pudieron guardar los datos', error));
 }
 
 export function loadCurrentCommerceId() {
-  const id = window.localStorage.getItem(STORAGE_COMMERCE_ID_KEY);
-  return id || null;
+  return null;
 }
+
 export function loadCurrentUserId() {
-  const id = window.localStorage.getItem(STORAGE_USER_ID_KEY);
-  return id || null;
+  return null;
 }
 
 export function saveCurrentCommerceId() {
-  if (state.currentCommerceId) {
-    window.localStorage.setItem(STORAGE_COMMERCE_ID_KEY, state.currentCommerceId);
-  } else {
-    window.localStorage.removeItem(STORAGE_COMMERCE_ID_KEY);
-  }
+  /* persistencia deshabilitada para evitar almacenamiento local */
 }
+
 export function saveCurrentUserId() {
-  if (state.currentUserId) {
-    window.localStorage.setItem(STORAGE_USER_ID_KEY, state.currentUserId);
-  } else {
-    window.localStorage.removeItem(STORAGE_USER_ID_KEY);
-  }
+  /* persistencia deshabilitada para evitar almacenamiento local */
 }

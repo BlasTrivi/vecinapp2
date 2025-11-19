@@ -21,7 +21,7 @@ export function renderUserView(container) {
   headerBox.appendChild(title);
   const p = document.createElement('p');
   p.className = 'muted';
-  p.textContent = 'Filtrá por texto, categoría o barrio. En esta demo los datos se guardan en tu navegador.';
+  p.textContent = 'Filtrá por texto, categoría o barrio. Las promos se sincronizan directamente con la base de datos de VecinAPP.';
   headerBox.appendChild(p);
   wrapper.appendChild(headerBox);
   const filtersDiv = document.createElement('div');
@@ -230,7 +230,7 @@ export function renderCommerceLogin(container) {
   container.appendChild(h2);
   const p = document.createElement('p');
   p.className = 'muted';
-  p.textContent = 'Si el comercio no existe, se creará automáticamente y quedará guardado en este navegador.';
+  p.textContent = 'Si el comercio no existe, se creará automáticamente y quedará sincronizado con la base de datos.';
   container.appendChild(p);
   const form = document.createElement('form');
   form.className = 'form';
