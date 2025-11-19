@@ -137,40 +137,65 @@ let userFilters = { search: "", category: "Todas", neighborhood: "" };
 // Vista de registro
 function renderAuthView(container) {
   const wrapper = document.createElement("div");
-  wrapper.className = "form";
+  wrapper.className = "auth-stack";
   wrapper.innerHTML = `
-    <div style="display:flex; gap:0.5rem; margin-bottom:0.75rem;">
-      <button type="button" id="tab-register" class="btn primary">Registro</button>
-      <button type="button" id="tab-login" class="btn">Login</button>
+    <div class="auth-card" aria-live="polite">
+      <div class="auth-card-logo">
+        <div class="logo-mark">VA</div>
+      </div>
+      <div class="auth-card-head">
+        <p class="muted">Bienvenido a</p>
+        <h2 id="auth-title">VecinAPP</h2>
+        <p id="auth-subtitle">Publicá, descubrí y mové tus promos al instante.</p>
+      </div>
+      <div id="auth-content"></div>
+      <div class="auth-extra">
+        <button class="link" type="button" id="auth-forgot" disabled>¿Olvidaste tu contraseña?</button>
+      </div>
+      <div class="auth-cta">
+        <span class="muted" id="auth-cta-label"></span>
+        <button type="button" class="btn ghost" id="auth-toggle"></button>
+      </div>
     </div>
-    <div id="auth-content"></div>
   `;
   container.appendChild(wrapper);
 
-  const tabRegister = wrapper.querySelector('#tab-register');
-  const tabLogin = wrapper.querySelector('#tab-login');
   const content = wrapper.querySelector('#auth-content');
+  const titleEl = wrapper.querySelector('#auth-title');
+  const descEl = wrapper.querySelector('#auth-subtitle');
+  const forgotBtn = wrapper.querySelector('#auth-forgot');
+  const toggleBtn = wrapper.querySelector('#auth-toggle');
+  const ctaLabel = wrapper.querySelector('#auth-cta-label');
+  let currentMode = 'login';
 
-  function setActive(tab) {
-    if (tab === 'register') {
-      tabRegister.classList.add('primary');
-      tabLogin.classList.remove('primary');
-      renderRegister();
-    } else {
-      tabLogin.classList.add('primary');
-      tabRegister.classList.remove('primary');
+  function setMode(mode) {
+    currentMode = mode;
+    if (mode === 'login') {
+      titleEl.textContent = 'Bienvenido a VecinAPP';
+      descEl.textContent = 'Ingresá para descubrir promos o administrar tus beneficios.';
+      ctaLabel.textContent = '¿No tenés cuenta?';
+      toggleBtn.textContent = 'Registrarme';
+      forgotBtn.hidden = false;
+      forgotBtn.disabled = false;
       renderLogin();
+    } else {
+      titleEl.textContent = 'Crear cuenta en VecinAPP';
+      descEl.textContent = 'Registrate como vecino o comercio para empezar a sumar promos.';
+      ctaLabel.textContent = '¿Ya tenés cuenta?';
+      toggleBtn.textContent = 'Iniciar sesión';
+      forgotBtn.hidden = true;
+      forgotBtn.disabled = true;
+      renderRegister();
     }
   }
 
-  tabRegister.addEventListener('click', () => setActive('register'));
-  tabLogin.addEventListener('click', () => setActive('login'));
+  toggleBtn.addEventListener('click', () => {
+    setMode(currentMode === 'login' ? 'register' : 'login');
+  });
 
   function renderRegister() {
     content.innerHTML = `
-      <h2>Registro</h2>
-      <p class="muted">Elegí tu rol y completa los datos. (Demo: contraseñas sin cifrado)</p>
-      <form id="register-form">
+      <form id="register-form" class="auth-form">
         <label>Rol
           <select name="role" required>
             <option value="user">Vecino / Cliente</option>
@@ -255,36 +280,47 @@ function renderAuthView(container) {
 
   function renderLogin() {
     content.innerHTML = `
-      <h2>Login</h2>
-      <p class="muted">Ingresá con tu email y contraseña según el rol.</p>
-      <form id="login-form">
-        <label>Rol
-          <select name="role" required>
-            <option value="user">Vecino / Cliente</option>
-            <option value="commerce">Comercio</option>
-          </select>
+      <form id="login-form" class="auth-form">
+        <div class="role-toggle" aria-label="Seleccioná tu rol">
+          <button type="button" class="role-btn active" data-role="user">Vecino</button>
+          <button type="button" class="role-btn" data-role="commerce">Comercio</button>
+        </div>
+        <label class="field">
+          <span>Email</span>
+          <div class="input-field">
+            <span class="input-icon">@</span>
+            <input type="email" name="email" required placeholder="tu@email.com" />
+          </div>
         </label>
-        <label>Email
-          <input type="email" name="email" required />
-        </label>
-        <label>Contraseña
-          <input type="password" name="password" required minlength="4" />
+        <label class="field">
+          <span>Contraseña</span>
+          <div class="input-field">
+            <span class="input-icon">•••</span>
+            <input type="password" name="password" required minlength="4" placeholder="••••••" />
+          </div>
         </label>
         <div class="form-actions">
-          <button type="submit" class="btn primary">Entrar</button>
+          <button type="submit" class="btn primary">Iniciar sesión</button>
         </div>
       </form>
-      <p class="muted" style="margin-top:0.75rem; font-size:0.75rem;">Demo sin cifrado ni recuperación de contraseña.</p>
+      <p class="muted auth-note">Demo sin cifrado ni recuperación automática.</p>
     `;
     const form = content.querySelector('#login-form');
+    let loginRole = 'user';
+    const roleButtons = form.querySelectorAll('.role-btn');
+    roleButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        loginRole = btn.dataset.role;
+        roleButtons.forEach(b => b.classList.toggle('active', b === btn));
+      });
+    });
     form.addEventListener('submit', e => {
       e.preventDefault();
       const fd = new FormData(form);
-      const role = fd.get('role');
       const email = (fd.get('email')||'').toString().trim().toLowerCase();
       const password = (fd.get('password')||'').toString();
       if (!email || !password) return;
-      if (role === 'user') {
+      if (loginRole === 'user') {
         const user = state.data.users.find(u=>u.email===email && u.password===password);
         if (!user) { alert('Credenciales incorrectas.'); return; }
         state.currentUserId = user.id; saveCurrentUserId(); state.sessionRole='user'; renderApp();
@@ -296,8 +332,8 @@ function renderAuthView(container) {
     });
   }
 
-  // Mostrar registro por defecto
-  setActive('register');
+  // Mostrar login por defecto
+  setMode('login');
 }
 
 function renderUserView(container) {

@@ -7,6 +7,7 @@ export let userFilters = { search: '', category: 'Todas', neighborhood: '' };
 
 export function renderUserView(container) {
   const wrapper = document.createElement('div');
+  wrapper.className = 'user-view';
   const title = document.createElement('h2');
   // Ajustar título según filtro de comercio
   if (state.mapState.selectedCommerceId) {
@@ -15,11 +16,14 @@ export function renderUserView(container) {
   } else {
     title.textContent = 'Promos cerca tuyo';
   }
-  wrapper.appendChild(title);
+  const headerBox = document.createElement('div');
+  headerBox.className = 'section-header';
+  headerBox.appendChild(title);
   const p = document.createElement('p');
   p.className = 'muted';
   p.textContent = 'Filtrá por texto, categoría o barrio. En esta demo los datos se guardan en tu navegador.';
-  wrapper.appendChild(p);
+  headerBox.appendChild(p);
+  wrapper.appendChild(headerBox);
   const filtersDiv = document.createElement('div');
   filtersDiv.className = 'filters';
   filtersDiv.innerHTML = `

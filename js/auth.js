@@ -2,7 +2,6 @@
 import { state, uuid, getCurrentUser, getCurrentCommerce } from './state.js';
 import { saveData, saveCurrentUserId, saveCurrentCommerceId } from './storage.js';
 import { renderUserView, renderCommerceView, renderProfileView, renderCommerceStatsView } from './views.js';
-import { renderCommerceLogin } from './views.js';
 
 export function addLogout(container) {
   const btn = document.createElement('button');
@@ -21,49 +20,84 @@ export function addLogout(container) {
 
 export function renderAuthView(container) {
   const wrapper = document.createElement('div');
-  wrapper.className = 'form';
+  wrapper.className = 'auth-stack';
   wrapper.innerHTML = `
-    <div style="display:flex; gap:0.5rem; margin-bottom:0.75rem;">
-      <button type="button" id="tab-register" class="btn primary">Registro</button>
-      <button type="button" id="tab-login" class="btn">Login</button>
+    <div class="auth-card" aria-live="polite">
+      <div class="auth-card-logo">
+        <img src="img/ChatGPT%20Image%2019%20nov%202025,%2013_40_13.png" alt="VecinAPP" class="logo-img" />
+      </div>
+      <div class="auth-card-head">
+        <p class="muted">Bienvenido a</p>
+        <h2 id="auth-title">VecinAPP</h2>
+        <p id="auth-subtitle">Conectamos vecinos y comercios con promos reales.</p>
+      </div>
+      <div id="auth-content"></div>
+      <div class="auth-extra">
+        <button class="link" type="button" id="auth-forgot">¿Olvidaste tu contraseña?</button>
+      </div>
+      <div class="auth-cta">
+        <span class="muted" id="auth-cta-label"></span>
+        <button type="button" class="btn ghost" id="auth-toggle"></button>
+      </div>
     </div>
-    <div id="auth-content"></div>
   `;
   container.appendChild(wrapper);
 
-  const tabRegister = wrapper.querySelector('#tab-register');
-  const tabLogin = wrapper.querySelector('#tab-login');
+  const card = wrapper.querySelector('.auth-card');
   const content = wrapper.querySelector('#auth-content');
+  const titleEl = wrapper.querySelector('#auth-title');
+  const descEl = wrapper.querySelector('#auth-subtitle');
+  const forgotBtn = wrapper.querySelector('#auth-forgot');
+  const toggleBtn = wrapper.querySelector('#auth-toggle');
+  const ctaLabel = wrapper.querySelector('#auth-cta-label');
 
-  function setActive(tab) {
-    if (tab === 'register') {
-      tabRegister.classList.add('primary');
-      tabLogin.classList.remove('primary');
-      renderRegister();
-    } else {
-      tabLogin.classList.add('primary');
-      tabRegister.classList.remove('primary');
+  let currentMode = 'login';
+
+  function setMode(mode) {
+    currentMode = mode;
+    card.classList.toggle('auth-card-wide', mode === 'register');
+    if (mode === 'login') {
+      titleEl.textContent = 'Bienvenido a VecinAPP';
+      descEl.textContent = 'Ingresá para descubrir promos o administrar tus beneficios.';
+      ctaLabel.textContent = '¿No tenés cuenta?';
+      toggleBtn.textContent = 'Registrarme';
+      forgotBtn.hidden = false;
+      forgotBtn.disabled = false;
       renderLogin();
+    } else {
+      titleEl.textContent = 'Crear cuenta en VecinAPP';
+      descEl.textContent = 'Registrate como vecino o comercio y activá tus promos.';
+      ctaLabel.textContent = '¿Ya tenés cuenta?';
+      toggleBtn.textContent = 'Iniciar sesión';
+      forgotBtn.hidden = true;
+      forgotBtn.disabled = true;
+      renderRegister();
     }
   }
 
-  tabRegister.addEventListener('click', () => setActive('register'));
-  tabLogin.addEventListener('click', () => setActive('login'));
+  toggleBtn.addEventListener('click', () => {
+    setMode(currentMode === 'login' ? 'register' : 'login');
+  });
+
+  forgotBtn.addEventListener('click', () => {
+    if (forgotBtn.disabled) return;
+    alert('Demo sin backend: contactá al administrador para resetear tu contraseña.');
+  });
 
   function renderRegister() {
     content.innerHTML = `
-      <h2>Registro</h2>
-      <p class="muted">Elegí tu rol y completa los datos. (Demo: contraseñas sin cifrado)</p>
-      <form id="register-form">
-        <label>Rol
+      <form id="register-form" class="auth-form">
+        <label class="field">
+          <span>¿Cómo querés usar VecinAPP?</span>
           <select name="role" required>
             <option value="user">Vecino / Cliente</option>
             <option value="commerce">Comercio</option>
           </select>
         </label>
         <div id="role-fields"></div>
-        <label style="margin-top:0.5rem;">
-          <input type="checkbox" name="terms" required /> Acepto términos y condiciones
+        <label class="terms-check">
+          <input type="checkbox" name="terms" required />
+          <span>Acepto términos y condiciones</span>
         </label>
         <div class="form-actions">
           <button type="submit" class="btn primary">Registrarme</button>
@@ -75,52 +109,70 @@ export function renderAuthView(container) {
     function renderRoleSpecific(role) {
       if (role === 'user') {
         roleFields.innerHTML = `
-          <label>Nombre
-            <input name="name" required />
+          <label class="field">
+            <span>Nombre</span>
+            <input name="name" required placeholder="Tu nombre completo" />
           </label>
-          <label>Email
-            <input type="email" name="email" required />
+          <label class="field">
+            <span>Email</span>
+            <input type="email" name="email" required placeholder="tu@email.com" />
           </label>
-          <label>Contraseña
-            <input type="password" name="password" required minlength="4" />
+          <label class="field">
+            <span>Contraseña</span>
+            <input type="password" name="password" required minlength="4" placeholder="Mínimo 4 caracteres" />
           </label>
         `;
       } else {
         roleFields.innerHTML = `
-          <label>Nombre del comercio
-            <input name="commerceName" required />
+          <label class="field">
+            <span>Nombre del comercio</span>
+            <input name="commerceName" required placeholder="Ej: Verdulería 9 de Julio" />
           </label>
-          <label>Rubro
+          <label class="field">
+            <span>Rubro</span>
             <input name="category" placeholder="Ej: Gastronomía" required />
           </label>
-          <label>Email
-            <input type="email" name="email" required />
+          <label class="field">
+            <span>Email</span>
+            <input type="email" name="email" required placeholder="contacto@comercio.com" />
           </label>
-          <label>Contraseña
-            <input type="password" name="password" required minlength="4" />
+          <label class="field">
+            <span>Contraseña</span>
+            <input type="password" name="password" required minlength="4" placeholder="Mínimo 4 caracteres" />
           </label>
-          <label>Ubicación (barrio o dirección de referencia)
+          <label class="field">
+            <span>Ubicación de referencia</span>
             <input name="location" placeholder="Barrio o dirección" />
           </label>
-          <div id="reg-map" style="height:300px;border:1px solid #ddd;border-radius:0.5rem;margin:0.5rem 0;"></div>
-          <div class="form-row" style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
-            <input name="lat" placeholder="Lat" style="width:8rem" required />
-            <input name="lng" placeholder="Lng" style="width:8rem" required />
+          <div id="reg-map" class="auth-map"></div>
+          <div class="auth-coords">
             <button type="button" class="btn" id="btn-reg-use-pos">Usar mi ubicación</button>
-            <span class="muted" style="font-size:0.75rem;">Consejo: hacé clic en el mapa para colocar el pin.</span>
+            <label class="field">
+              <span>Latitud</span>
+              <input name="lat" placeholder="-32.95" required />
+            </label>
+            <label class="field">
+              <span>Longitud</span>
+              <input name="lng" placeholder="-60.65" required />
+            </label>
           </div>
+          <p class="muted auth-note">Tip: hacé clic en el mapa para ubicar tu comercio.</p>
         `;
         setTimeout(initRegisterCommerceMap, 0);
       }
     }
-    form.elements['role'].addEventListener('change', e => renderRoleSpecific(e.target.value));
-    renderRoleSpecific(form.elements['role'].value);
+    const roleSelect = form.elements['role'];
+    roleSelect.addEventListener('change', e => renderRoleSpecific(e.target.value));
+    renderRoleSpecific(roleSelect.value);
     form.addEventListener('submit', e => {
       e.preventDefault();
       const fd = new FormData(form);
       const role = fd.get('role');
       const terms = fd.get('terms');
-      if (!terms) return;
+      if (!terms) {
+        alert('Aceptá los términos para continuar.');
+        return;
+      }
       if (role === 'user') {
         const name = (fd.get('name')||'').toString().trim();
         const email = (fd.get('email')||'').toString().trim().toLowerCase();
@@ -154,20 +206,19 @@ export function renderAuthView(container) {
 
   function renderLogin() {
     content.innerHTML = `
-      <h2>Login</h2>
-      <p class="muted">Ingresá tu email y contraseña. El rol se detecta automáticamente.</p>
-      <form id="login-form">
-        <label>Email
-          <input type="email" name="email" required />
+      <form id="login-form" class="auth-form">
+        <label class="field">
+          <span>Email</span>
+          <input type="email" name="email" required placeholder="tu@email.com" />
         </label>
-        <label>Contraseña
-          <input type="password" name="password" required minlength="4" />
+        <label class="field">
+          <span>Contraseña</span>
+          <input type="password" name="password" required minlength="4" placeholder="••••••" />
         </label>
-        <div class="form-actions">
-          <button type="submit" class="btn primary">Entrar</button>
+        <div class="form-actions" style="justify-content:flex-end;">
+          <button type="submit" class="btn primary">Iniciar sesión</button>
         </div>
       </form>
-      <p class="muted" style="margin-top:0.75rem; font-size:0.75rem;">Demo sin cifrado ni recuperación de contraseña.</p>
     `;
     const form = content.querySelector('#login-form');
     form.addEventListener('submit', e => {
@@ -183,18 +234,24 @@ export function renderAuthView(container) {
         return;
       }
       if (user) {
-        state.currentUserId = user.id; saveCurrentUserId(); state.sessionRole='user'; renderApp();
+        state.currentUserId = user.id;
+        saveCurrentUserId();
+        state.sessionRole = 'user';
+        renderApp();
         return;
       }
       if (commerce) {
-        state.currentCommerceId = commerce.id; saveCurrentCommerceId(); state.sessionRole='commerce'; renderApp();
+        state.currentCommerceId = commerce.id;
+        saveCurrentCommerceId();
+        state.sessionRole = 'commerce';
+        renderApp();
         return;
       }
       alert('Credenciales incorrectas.');
     });
   }
 
-  setActive('register');
+  setMode('login');
 }
 
 // Mapa para registro de comercio
