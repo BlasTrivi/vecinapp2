@@ -37,6 +37,15 @@
 
   <!-- Leaflet JS para el mapa -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <div id="terms-modal" aria-hidden="true">
+    <div class="terms-panel" role="dialog" aria-modal="true" aria-label="Términos y condiciones">
+      <header>
+        <h2>📄 Términos y Condiciones</h2>
+        <button type="button" data-close-terms aria-label="Cerrar">×</button>
+      </header>
+      <div class="terms-content" tabindex="0"></div>
+    </div>
+  </div>
   <!-- (QR eliminado: ahora canje por código ingresado por el comercio) -->
   <script type="module" src="js/main.js"></script>
 </body>

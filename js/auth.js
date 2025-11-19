@@ -97,7 +97,7 @@ export function renderAuthView(container) {
         <div id="role-fields"></div>
         <label class="terms-check">
           <input type="checkbox" name="terms" required />
-          <span>Acepto términos y condiciones</span>
+          <span>Acepto <button type="button" class="link-inline" data-open-terms>términos y condiciones</button></span>
         </label>
         <div class="form-actions">
           <button type="submit" class="btn primary">Registrarme</button>
