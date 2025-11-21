@@ -731,7 +731,7 @@ label {
 }
 
 .card {
-  background: linear-gradient(180deg, rgba(255,255,255,0.95), #ffffff);
+  background: #ffffff;
   border-radius: 1.25rem;
   padding: 1.05rem 1.15rem 1.1rem;
   border: 1px solid rgba(64,98,105,0.15);
@@ -749,7 +749,7 @@ label {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(145deg, rgba(35,142,195,0.15), transparent 65%);
+  background: linear-gradient(145deg, rgba(255,255,255,0.45), transparent 70%);
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.2s ease;
