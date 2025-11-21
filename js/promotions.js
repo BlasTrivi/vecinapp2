@@ -3,6 +3,23 @@ import { state, getCurrentCommerce, uuid } from './state.js';
 import { saveData } from './storage.js';
 import { renderApp } from './auth.js';
 
+const discountTypeLabels = {
+  percent: '% Descuento',
+  amount: 'Monto fijo',
+  '2x1': '2x1',
+  combo: 'Combo',
+  happyhour: 'Happy Hour',
+  custom: 'Personalizado'
+};
+
+function formatDiscountDisplayValue(promo) {
+  if (!promo || !promo.discountValue) return '';
+  if (promo.discountType === 'custom') {
+    return promo.discountValue.split('\n').join(' · ');
+  }
+  return promo.discountValue;
+}
+
 export function isPromoValidForUser(promo) {
   if (!promo.isActive) return false;
   const now = Date.now();
@@ -93,8 +110,9 @@ export function createPromotionCard(promo, mode) {
   // Tipo/valor descuento
   const infoDiscount = document.createElement('p');
   infoDiscount.className = 'card-text small';
-  let textTipo = promo.discountType || 'descuento';
-  infoDiscount.textContent = 'Tipo: ' + textTipo + (promo.discountValue ? ' · Valor: ' + promo.discountValue : '');
+  const textTipo = discountTypeLabels[promo.discountType] || promo.discountType || 'descuento';
+  const valueText = formatDiscountDisplayValue(promo);
+  infoDiscount.textContent = 'Tipo: ' + textTipo + (valueText ? ' · Valor: ' + valueText : '');
   card.appendChild(infoDiscount);
 
   // Estado y cupones
@@ -186,17 +204,16 @@ export function createPromotionForm() {
       </select>
     </label>
     <label>Tipo de descuento
-      <select name="discountType">
+      <select name="discountType" id="discount-type">
         <option value="percent">% Descuento</option>
         <option value="amount">Monto fijo</option>
         <option value="2x1">2x1</option>
         <option value="combo">Combo</option>
         <option value="happyhour">Happy Hour</option>
+        <option value="custom">Personalizado</option>
       </select>
     </label>
-    <label>Valor descuento
-      <input name="discountValue" placeholder="Ej: 20% o $500" />
-    </label>
+    <div id="discount-dynamic" class="discount-dynamic"></div>
     <label>Código para canje (visible al cliente)
       <input name="promoCode" placeholder="Ej: VERANO10" required />
     </label>
@@ -227,7 +244,6 @@ export function createPromotionForm() {
       form.elements['imageUrl'].value = editingPromo.imageUrl || '';
       form.elements['category'].value = editingPromo.category || 'Gastronomía';
       form.elements['discountType'].value = editingPromo.discountType || 'percent';
-      form.elements['discountValue'].value = editingPromo.discountValue || '';
       form.elements['maxCoupons'].value = editingPromo.maxCoupons != null ? editingPromo.maxCoupons : '';
       form.elements['validFrom'].value = editingPromo.validFrom || '';
       form.elements['validTo'].value = editingPromo.validTo || '';
@@ -243,6 +259,160 @@ export function createPromotionForm() {
       form.elements['category'].value = 'Gastronomía';
       form.elements['discountType'].value = 'percent';
     }
+
+    const discountTypeSelect = form.elements['discountType'];
+    const discountDynamic = form.querySelector('#discount-dynamic');
+    const initialDiscountValue = editingPromo ? editingPromo.discountValue || '' : '';
+
+    const parseNumericValue = raw => {
+      if (raw == null) return null;
+      const normalized = raw.toString().replace(',', '.').replace(/[^\d.]/g, '');
+      if (!normalized) return null;
+      const num = parseFloat(normalized);
+      return Number.isNaN(num) ? null : num;
+    };
+
+    const splitCustomValue = value => {
+      if (!value) return [];
+      return value.split('\n').map(v => v.trim()).filter(Boolean);
+    };
+
+    function renderDiscountFields(type, prefillRaw) {
+      if (!discountDynamic) return;
+      discountDynamic.innerHTML = '';
+      const prefill = typeof prefillRaw === 'string' ? prefillRaw : '';
+      if (type === 'percent') {
+        const label = document.createElement('label');
+        label.textContent = 'Porcentaje de descuento';
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.name = 'discountPercent';
+        input.placeholder = 'Ej: 20';
+        input.min = '1';
+        input.max = '100';
+        input.step = '0.5';
+        input.required = true;
+        const numeric = parseNumericValue(prefill);
+        if (numeric !== null) input.value = numeric;
+        label.appendChild(input);
+        discountDynamic.appendChild(label);
+        return;
+      }
+      if (type === 'amount') {
+        const label = document.createElement('label');
+        label.textContent = 'Monto del descuento';
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.name = 'discountAmount';
+        input.placeholder = 'Ej: 500';
+        input.min = '1';
+        input.step = '0.5';
+        input.required = true;
+        const numeric = parseNumericValue(prefill);
+        if (numeric !== null) input.value = numeric;
+        label.appendChild(input);
+        discountDynamic.appendChild(label);
+        return;
+      }
+      if (type === 'combo') {
+        const label = document.createElement('label');
+        label.textContent = 'Descripción del combo';
+        const textarea = document.createElement('textarea');
+        textarea.name = 'comboDescription';
+        textarea.rows = 3;
+        textarea.placeholder = 'Detalle qué incluye el combo';
+        textarea.required = true;
+        if (prefill) textarea.value = prefill;
+        label.appendChild(textarea);
+        discountDynamic.appendChild(label);
+        return;
+      }
+      if (type === 'happyhour') {
+        const label = document.createElement('label');
+        label.textContent = 'Detalle del Happy Hour';
+        const textarea = document.createElement('textarea');
+        textarea.name = 'happyHourDetail';
+        textarea.rows = 2;
+        textarea.placeholder = 'Ej: 18 a 20 hs, 30% en tragos';
+        textarea.required = true;
+        if (prefill) textarea.value = prefill;
+        label.appendChild(textarea);
+        discountDynamic.appendChild(label);
+        return;
+      }
+      if (type === 'custom') {
+        const wrap = document.createElement('div');
+        const info = document.createElement('p');
+        info.className = 'muted';
+        info.textContent = 'Personalizá la promo agregando los ítems que quieras destacar.';
+        const itemsWrap = document.createElement('div');
+        itemsWrap.className = 'custom-items';
+        itemsWrap.style.display = 'flex';
+        itemsWrap.style.flexDirection = 'column';
+        itemsWrap.style.gap = '0.5rem';
+        const addBtn = document.createElement('button');
+        addBtn.type = 'button';
+        addBtn.className = 'btn';
+        addBtn.textContent = 'Agregar detalle';
+        addBtn.style.alignSelf = 'flex-start';
+        addBtn.style.marginTop = '0.25rem';
+
+        wrap.appendChild(info);
+        wrap.appendChild(itemsWrap);
+        wrap.appendChild(addBtn);
+        discountDynamic.appendChild(wrap);
+
+        const addItemRow = (value = '') => {
+          const row = document.createElement('div');
+          row.style.display = 'flex';
+          row.style.gap = '0.5rem';
+          row.style.alignItems = 'center';
+          const input = document.createElement('input');
+          input.name = 'customItem[]';
+          input.placeholder = 'Detalle personalizado';
+          if (value) input.value = value;
+          const removeBtn = document.createElement('button');
+          removeBtn.type = 'button';
+          removeBtn.className = 'btn danger';
+          removeBtn.textContent = 'Quitar';
+          removeBtn.addEventListener('click', () => {
+            row.remove();
+            if (!itemsWrap.querySelector('input')) addItemRow();
+          });
+          row.appendChild(input);
+          row.appendChild(removeBtn);
+          itemsWrap.appendChild(row);
+        };
+
+        const values = splitCustomValue(prefill);
+        if (values.length) {
+          values.forEach(v => addItemRow(v));
+        } else {
+          addItemRow();
+        }
+
+        addBtn.addEventListener('click', () => addItemRow());
+        return;
+      }
+      if (type === '2x1') {
+        const info = document.createElement('p');
+        info.className = 'muted';
+        info.textContent = 'La promo 2x1 no necesita datos extra.';
+        discountDynamic.appendChild(info);
+        return;
+      }
+
+      const fallback = document.createElement('label');
+      fallback.textContent = 'Detalle del descuento';
+      const input = document.createElement('input');
+      input.name = 'discountGeneric';
+      if (prefill) input.value = prefill;
+      fallback.appendChild(input);
+      discountDynamic.appendChild(fallback);
+    }
+
+    renderDiscountFields(discountTypeSelect.value, initialDiscountValue);
+    discountTypeSelect.addEventListener('change', () => renderDiscountFields(discountTypeSelect.value));
 
     // Manejo de archivo -> Data URL para persistir junto a la promo
     const fileInput = document.getElementById('image-file');
@@ -270,13 +440,56 @@ export function createPromotionForm() {
       const fd = new FormData(form);
       const title = (fd.get('title')||'').toString().trim();
       if (!title) return;
+      const discountType = (fd.get('discountType')||'percent').toString();
+      let discountValue = '';
+      if (discountType === 'percent') {
+        const percentRaw = fd.get('discountPercent');
+        const percent = parseNumericValue(percentRaw);
+        if (percent === null || percent <= 0 || percent > 100) {
+          alert('Ingresá un porcentaje válido (1-100).');
+          return;
+        }
+        discountValue = percent + '%';
+      } else if (discountType === 'amount') {
+        const amountRaw = fd.get('discountAmount');
+        const amount = parseNumericValue(amountRaw);
+        if (amount === null || amount <= 0) {
+          alert('Ingresá un monto válido.');
+          return;
+        }
+        const normalizedAmount = amount.toFixed(2).replace(/\.00$/, '');
+        discountValue = '$' + normalizedAmount;
+      } else if (discountType === 'combo') {
+        const detail = (fd.get('comboDescription')||'').toString().trim();
+        if (!detail) {
+          alert('Describí el combo.');
+          return;
+        }
+        discountValue = detail;
+      } else if (discountType === 'happyhour') {
+        const detail = (fd.get('happyHourDetail')||'').toString().trim();
+        if (!detail) {
+          alert('Detallá el Happy Hour.');
+          return;
+        }
+        discountValue = detail;
+      } else if (discountType === 'custom') {
+        const customItems = fd.getAll('customItem[]').map(entry => (entry || '').toString().trim()).filter(Boolean);
+        if (!customItems.length) {
+          alert('Agregá al menos un detalle personalizado.');
+          return;
+        }
+        discountValue = customItems.join('\n');
+      } else {
+        discountValue = (fd.get('discountGeneric')||'').toString().trim();
+      }
       const promoData = {
         title,
         description: (fd.get('description')||'').toString().trim(),
         imageUrl: uploadedImageDataUrl || (fd.get('imageUrl')||'').toString().trim(),
         category: (fd.get('category')||'Gastronomía').toString(),
-        discountType: (fd.get('discountType')||'percent').toString(),
-        discountValue: (fd.get('discountValue')||'').toString().trim(),
+        discountType,
+        discountValue: discountValue.trim(),
         validFrom: fd.get('validFrom') || '',
         validTo: fd.get('validTo') || '',
         promoCode: (fd.get('promoCode')||'').toString().trim()
